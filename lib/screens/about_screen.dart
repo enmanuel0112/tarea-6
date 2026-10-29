@@ -63,7 +63,7 @@ class AboutScreen extends StatelessWidget {
                         .secondaryContainer,
                     child: ClipOval(
                       child: Image.asset(
-                        'assets/images/cesar.jpg',
+                        'assets/images/cesar.png',
                         width: 136,
                         height: 136,
                         fit: BoxFit.cover,
