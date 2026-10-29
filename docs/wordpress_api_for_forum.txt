@@ -1,0 +1,5 @@
+API utilizada:
+https://wordpress.org/news/wp-json/wp/v2/posts?per_page=3&_fields=id,date,link,title,excerpt
+
+Página:
+https://wordpress.org/news/
