@@ -7,56 +7,93 @@ import qrcode
 
 ROOT = Path(__file__).resolve().parents[1]
 APK_URL = 'https://github.com/enmanuel0112/tarea-6/releases/download/v1.0.0/MultiTool-ITLA.apk'
+CODE_URL = 'https://github.com/enmanuel0112/tarea-6'
 PHOTO = ROOT / 'assets' / 'images' / 'cesar.png'
 OUTPUT = ROOT / 'docs' / 'Entrega-Tarea-6-Cesar-Ogando.pdf'
 
 
 def main():
-    if not APK_URL.startswith('https://'):
-        raise ValueError('APK_URL debe ser una URL pública HTTPS real.')
+    if not APK_URL.startswith('https://') or not CODE_URL.startswith('https://'):
+        raise ValueError('Los códigos QR requieren URLs públicas HTTPS.')
     if not PHOTO.is_file():
         raise FileNotFoundError(PHOTO)
-    qr_path = ROOT / 'build' / 'delivery-apk-qr.png'
-    qr_path.parent.mkdir(parents=True, exist_ok=True)
-    qrcode.make(APK_URL).save(qr_path)
+
+    qr_dir = ROOT / 'build' / 'delivery-qrs'
+    qr_dir.mkdir(parents=True, exist_ok=True)
+    apk_qr = qr_dir / 'apk.png'
+    code_qr = qr_dir / 'code.png'
+    qrcode.make(APK_URL).save(apk_qr)
+    qrcode.make(CODE_URL).save(code_qr)
+
     width, height = A4
     pdf = canvas.Canvas(str(OUTPUT), pagesize=A4)
-    navy = colors.HexColor('#202B5B')
-    blue = colors.HexColor('#4256B5')
-    pale = colors.HexColor('#F1F3FC')
-    pdf.setFillColor(pale)
-    pdf.roundRect(38, 38, width - 76, height - 76, 22, fill=1, stroke=0)
+    navy = colors.HexColor('#123B70')
+    blue = colors.HexColor('#526B91')
+
+    # Página 1: portada académica, inspirada en la referencia entregada.
     pdf.setFillColor(navy)
-    pdf.roundRect(38, height - 250, width - 76, 212, 22, fill=1, stroke=0)
-    pdf.setFillColor(colors.white)
-    pdf.setFont('Helvetica-Bold', 25)
-    pdf.drawCentredString(width / 2, height - 100, 'MULTITOOL ITLA')
-    pdf.setFont('Helvetica', 14)
-    pdf.drawCentredString(width / 2, height - 128, 'Tarea 6 - Desarrollo Móvil')
-    pdf.drawImage(ImageReader(str(PHOTO)), width / 2 - 55, height - 390, 110, 110,
-                  preserveAspectRatio=True, mask='auto', anchor='c')
-    pdf.setFillColor(navy)
-    pdf.setFont('Helvetica-Bold', 17)
-    pdf.drawCentredString(width / 2, height - 420, 'Cesar Ogando')
+    pdf.setFont('Helvetica-Bold', 20)
+    pdf.drawCentredString(width / 2, height - 130,
+                          'Instituto Tecnológico de las Américas ITLA')
+    pdf.setFillColor(colors.black)
     pdf.setFont('Helvetica', 12)
-    pdf.drawCentredString(width / 2, height - 442, 'Matrícula: 2024-2485')
+    cover_lines = [
+        ('Asignatura:', 'Introducción al desarrollo de aplicaciones móviles'),
+        ('Tema:', 'MultiTool ITLA - Tarea 6'),
+        ('Nombre:', 'Cesar Ogando'),
+        ('Matrícula:', '2024-2485'),
+    ]
+    y = height - 195
+    for label, value in cover_lines:
+        pdf.setFont('Helvetica-Bold', 11)
+        label_width = pdf.stringWidth(label + ' ', 'Helvetica-Bold', 11)
+        value_width = pdf.stringWidth(value, 'Helvetica', 11)
+        x = (width - label_width - value_width) / 2
+        pdf.drawString(x, y, label)
+        pdf.setFont('Helvetica', 11)
+        pdf.drawString(x + label_width, y, value)
+        y -= 33
+    pdf.setFillColor(blue)
+    pdf.setFont('Helvetica-Bold', 16)
+    pdf.drawCentredString(width / 2, 185, 'MULTITOOL ITLA')
+    pdf.showPage()
+
+    # Página 2: foto y QR, siguiendo la distribución de la segunda página de referencia.
     pdf.setFillColor(blue)
     pdf.setFont('Helvetica-Bold', 11)
-    pdf.drawCentredString(width / 2, height - 490, 'CÓDIGO FUENTE')
-    pdf.setFillColor(navy)
-    pdf.setFont('Helvetica', 10)
-    pdf.drawCentredString(width / 2, height - 508, 'github.com/enmanuel0112/tarea-6')
-    pdf.setFillColor(blue)
+    pdf.drawString(62, height - 48, 'Tarea 6 - Desarrollo Móvil | MultiTool ITLA')
+    pdf.drawImage(ImageReader(str(PHOTO)), width / 2 - 85, height - 270, 170, 170,
+                  preserveAspectRatio=True, mask='auto', anchor='c')
+    pdf.setFillColor(colors.black)
+    pdf.setFont('Helvetica-Bold', 13)
+    pdf.drawCentredString(width / 2, height - 294, 'Cesar Ogando | 2024-2485')
+
+    left_x = 105
+    right_x = width - 105 - 130
+    qr_y = height - 505
+    pdf.setFont('Helvetica', 12)
+    pdf.drawCentredString(left_x + 65, qr_y + 145, 'Código fuente')
+    pdf.drawCentredString(right_x + 65, qr_y + 145, 'Descargar APK')
+    pdf.drawImage(str(code_qr), left_x, qr_y, 130, 130, mask='auto')
+    pdf.drawImage(str(apk_qr), right_x, qr_y, 130, 130, mask='auto')
+
     pdf.setFont('Helvetica-Bold', 11)
-    pdf.drawCentredString(width / 2, height - 540, 'DESCARGA DEL APK')
-    pdf.drawImage(str(qr_path), width / 2 - 60, height - 700, 120, 120,
-                  preserveAspectRatio=True, mask='auto')
-    pdf.setFillColor(navy)
-    pdf.setFont('Helvetica', 11)
-    pdf.drawCentredString(width / 2, height - 720, 'Escanear para descargar el APK')
-    pdf.setFillColor(colors.HexColor('#657099'))
-    pdf.setFont('Helvetica', 8)
-    pdf.drawCentredString(width / 2, 55, 'MultiTool ITLA | Entrega académica')
+    pdf.drawString(70, 120, 'Enlaces:')
+    pdf.setFont('Helvetica-Bold', 10)
+    pdf.drawString(70, 98, 'Código:')
+    pdf.setFillColor(colors.HexColor('#0645AD'))
+    pdf.drawString(125, 98, CODE_URL)
+    pdf.linkURL(CODE_URL, (125, 95, width - 60, 112), relative=0)
+    pdf.setFillColor(colors.black)
+    pdf.setFont('Helvetica-Bold', 10)
+    pdf.drawString(70, 78, 'APK:')
+    pdf.setFillColor(colors.HexColor('#0645AD'))
+    pdf.drawString(125, 78, 'Escanear el QR para descargar')
+    pdf.linkURL(APK_URL, (125, 75, width - 60, 92), relative=0)
+    pdf.setFillColor(colors.black)
+    pdf.setFont('Helvetica', 9)
+    pdf.drawCentredString(right_x + 65, qr_y - 16, 'Escanear para descargar el APK')
+    pdf.showPage()
     pdf.save()
     print(OUTPUT)
 
